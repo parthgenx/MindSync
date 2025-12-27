@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Check, X, Sparkles } from "lucide-react";
 import { tasksAPI } from "../services/api";
+import ReactMarkdown from "react-markdown";
+
 function TaskManager() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState({
@@ -43,7 +45,7 @@ function TaskManager() {
         title: task.title,
         description: task.description,
         completed: !task.completed,
-        priority: task.priority
+        priority: task.priority,
       });
       fetchTasks();
     } catch (error) {
@@ -169,9 +171,44 @@ function TaskManager() {
                 <X size={16} />
               </button>
             </div>
-            <p className="text-sm text-gray-300 whitespace-pre-line">
-              {suggestions}
-            </p>
+            <div className="prose prose-invert prose-sm max-w-none">
+              <ReactMarkdown
+                components={{
+                  p: ({ node, ...props }) => (
+                    <p
+                      className="mb-2 last:mb-0 text-sm leading-relaxed text-gray-300"
+                      {...props}
+                    />
+                  ),
+                  strong: ({ node, ...props }) => (
+                    <strong
+                      className="text-purple-300 font-semibold"
+                      {...props}
+                    />
+                  ),
+                  em: ({ node, ...props }) => (
+                    <em className="text-purple-200" {...props} />
+                  ),
+                  ol: ({ node, ...props }) => (
+                    <ol
+                      className="list-decimal list-inside mb-2 space-y-1 text-gray-300"
+                      {...props}
+                    />
+                  ),
+                  ul: ({ node, ...props }) => (
+                    <ul
+                      className="list-disc list-inside mb-2 space-y-1 text-gray-300"
+                      {...props}
+                    />
+                  ),
+                  li: ({ node, ...props }) => (
+                    <li className="leading-relaxed text-sm" {...props} />
+                  ),
+                }}
+              >
+                {suggestions}
+              </ReactMarkdown>
+            </div>
           </div>
         )}
       </div>
