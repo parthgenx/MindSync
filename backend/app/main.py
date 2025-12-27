@@ -22,7 +22,7 @@ from app.services import (
 )
 
 load_dotenv()
-app = FastAPI(title="AI Personal Assistant API")
+app = FastAPI(title="MindSync API", description="AI-powered productivity assistant")
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,6 +44,7 @@ async def signup(request: SignupRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
 @app.post("/api/auth/login")
 async def login(request: LoginRequest):
     """Log in an existing user"""
@@ -56,6 +57,7 @@ async def login(request: LoginRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
 @app.get("/api/auth/me")
 async def get_current_user(authorization: Optional[str] = Header(None)):
     """Get current user from token"""
@@ -69,6 +71,7 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid token")
     
     return {"user": user}
+
 # Helper function to get user ID from token
 def get_user_id_from_header(authorization: Optional[str]) -> str:
     """Extract user ID from authorization header"""
@@ -85,7 +88,7 @@ def get_user_id_from_header(authorization: Optional[str]) -> str:
 
 @app.get("/")
 def read_root():
-    return {"message": "AI Personal Assistant API", "status": "running"}
+    return {"message": "MindSync API", "status": "running"}
 
 @app.get("/health")
 def health_check():

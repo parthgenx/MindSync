@@ -27,7 +27,7 @@ function Dashboard() {
             <div className="inline-flex items-center gap-2 mb-3">
               <Sparkles className="text-indigo-400 animate-pulse" size={32} />
               <h1 className="text-5xl md:text-6xl font-bold gradient-text">
-                AI Personal Assistant
+                MindSync
               </h1>
             </div>
             <p className="text-gray-400 text-lg">
