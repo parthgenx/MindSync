@@ -31,13 +31,22 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel('gemini-3-flash-preview')
 
 def generate_ai_response(message: str, history: list) -> str:
-    context = "You are a helpful personal assistant.\n\n"
-    if history:
-        for msg in history[-5:]:
-            context += f"{msg.get('role')}: {msg.get('content')}\n"
-    context += f"user: {message}\nassistant:"
-    response = model.generate_content(context)
-    return response.text
+    try:
+        print(f"[DEBUG] Generating AI response for: {message}")
+        context = "You are a helpful personal assistant.\n\n"
+        if history:
+            for msg in history[-5:]:
+                context += f"{msg.get('role')}: {msg.get('content')}\n"
+        context += f"user: {message}\nassistant:"
+        print(f"[DEBUG] Context: {context[:100]}...")
+        response = model.generate_content(context)
+        print(f"[DEBUG] Response received: {response.text[:100]}...")
+        return response.text
+    except Exception as e:
+        print(f"[ERROR] AI generation failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 def generate_task_suggestions(title: str, description: str = None) -> str:
     prompt = f"Task: {title}\nDescription: {description or 'None'}\n\nProvide 3 brief suggestions."
