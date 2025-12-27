@@ -26,7 +26,10 @@ app = FastAPI(title="MindSync API", description="AI-powered productivity assista
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://mind-sync-three.vercel.app",  
+        "http://localhost:5173"  
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
