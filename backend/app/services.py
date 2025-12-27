@@ -62,8 +62,11 @@ def get_weather_data(city: str) -> dict:
         return {
             "city": data["name"],
             "temperature": data["main"]["temp"],
+            "feels_like": data["main"]["feels_like"],  # Added
             "description": data["weather"][0]["description"],
-            "humidity": data["main"]["humidity"]
+            "icon": data["weather"][0]["icon"],  # Added
+            "humidity": data["main"]["humidity"],
+            "wind_speed": data["wind"]["speed"]  # Added
         }
     raise Exception("City not found")
 
