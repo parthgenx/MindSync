@@ -214,3 +214,69 @@ def get_user_from_token(token: str):
         return None
     except:
         return None
+
+# ==================== Conversation & Message functions ====================
+
+def create_conversation(user_id: str, title: str = "New Chat"):
+    """Create a new conversation"""
+    response = supabase.table('conversations').insert({
+        "user_id": user_id,
+        "title": title
+    }).execute()
+    return response.data[0] if response.data else None
+
+def get_user_conversations(user_id: str):
+    """Get all conversations for a user, sorted by most recent"""
+    response = supabase.table('conversations') \
+        .select('*') \
+        .eq('user_id', user_id) \
+        .order('updated_at', desc=True) \
+        .execute()
+    return response.data
+
+def get_conversation_messages(conversation_id: str):
+    """Get all messages for a conversation"""
+    response = supabase.table('messages') \
+        .select('*') \
+        .eq('conversation_id', conversation_id) \
+        .order('created_at', desc=False) \
+        .execute()
+    return response.data
+
+def save_message(conversation_id: str, role: str, content: str):
+    """Save a message to a conversation"""
+    response = supabase.table('messages').insert({
+        "conversation_id": conversation_id,
+        "role": role,
+        "content": content
+    }).execute()
+    # Update conversation's updated_at timestamp
+    supabase.table('conversations') \
+        .update({"updated_at": "now()"}) \
+        .eq('id', conversation_id) \
+        .execute()
+    return response.data[0] if response.data else None
+
+def delete_conversation(conversation_id: str):
+    """Delete a conversation and its messages (CASCADE)"""
+    response = supabase.table('conversations') \
+        .delete() \
+        .eq('id', conversation_id) \
+        .execute()
+    return len(response.data) > 0
+
+def update_conversation_title(conversation_id: str, title: str):
+    """Update conversation title"""
+    response = supabase.table('conversations') \
+        .update({"title": title}) \
+        .eq('id', conversation_id) \
+        .execute()
+    return response.data[0] if response.data else None
+
+def auto_generate_title(message: str) -> str:
+    """Generate a short title from the first user message"""
+    # Truncate to 50 characters
+    title = message.strip()
+    if len(title) > 50:
+        title = title[:47] + "..."
+    return title if title else "New Chat"

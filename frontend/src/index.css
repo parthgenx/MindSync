@@ -75,6 +75,19 @@
       0 0 60px rgba(99, 102, 241, 0.3),
       0 0 90px rgba(99, 102, 241, 0.2);
   }
+
+  /* Chat History Sidebar */
+  .chat-history-container {
+    width: 280px;
+    min-width: 280px;
+    height: 600px;
+    overflow: hidden;
+  }
+
+  .chat-history-sidebar {
+    height: 100%;
+    overflow: hidden;
+  }
 }
 @layer utilities {
   /* Fade In Animation */

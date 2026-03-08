@@ -25,4 +25,12 @@ class SignupRequest(BaseModel):
     
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str    
+    password: str
+
+class ConversationCreate(BaseModel):
+    title: Optional[str] = "New Chat"
+
+class MessageCreate(BaseModel):
+    role: str = "user"
+    content: str
+    conversation_history: Optional[List[dict]] = []

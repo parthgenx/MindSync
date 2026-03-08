@@ -6,7 +6,7 @@ from fastapi import Header
 import os
 from dotenv import load_dotenv
 # Custom imports
-from app.models import ChatMessage, ChatResponse, Task, SignupRequest, LoginRequest
+from app.models import ChatMessage, ChatResponse, Task, SignupRequest, LoginRequest, ConversationCreate, MessageCreate
 from app.services import (
     generate_ai_response, 
     generate_task_suggestions,
@@ -18,7 +18,14 @@ from app.services import (
     delete_task_from_db,
     signup_user,
     login_user,
-    get_user_from_token
+    get_user_from_token,
+    create_conversation,
+    get_user_conversations,
+    get_conversation_messages,
+    save_message,
+    delete_conversation,
+    update_conversation_title,
+    auto_generate_title
 )
 
 load_dotenv()
@@ -74,6 +81,76 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid token")
     
     return {"user": user}
+
+# ==================== Conversation Endpoints ====================
+
+@app.post("/api/conversations")
+async def create_new_conversation(body: ConversationCreate, authorization: Optional[str] = Header(None)):
+    """Create a new conversation"""
+    user_id = get_user_id_from_header(authorization)
+    conversation = create_conversation(user_id, body.title)
+    if not conversation:
+        raise HTTPException(status_code=500, detail="Failed to create conversation")
+    return {"conversation": conversation}
+
+@app.get("/api/conversations")
+async def list_conversations(authorization: Optional[str] = Header(None)):
+    """List all conversations for the authenticated user"""
+    user_id = get_user_id_from_header(authorization)
+    conversations = get_user_conversations(user_id)
+    return {"conversations": conversations}
+
+@app.get("/api/conversations/{conversation_id}/messages")
+async def get_messages(conversation_id: str, authorization: Optional[str] = Header(None)):
+    """Get all messages for a conversation"""
+    user_id = get_user_id_from_header(authorization)
+    messages = get_conversation_messages(conversation_id)
+    return {"messages": messages}
+
+@app.delete("/api/conversations/{conversation_id}")
+async def delete_conv(conversation_id: str, authorization: Optional[str] = Header(None)):
+    """Delete a conversation"""
+    user_id = get_user_id_from_header(authorization)
+    success = delete_conversation(conversation_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return {"message": "Conversation deleted"}
+
+@app.post("/api/conversations/{conversation_id}/messages")
+async def send_conversation_message(
+    conversation_id: str,
+    body: MessageCreate,
+    authorization: Optional[str] = Header(None)
+):
+    """Save a user message, get AI response, and save it too"""
+    user_id = get_user_id_from_header(authorization)
+    
+    # Save the user's message
+    save_message(conversation_id, "user", body.content)
+    
+    # Check if this is the first user message — auto-generate title
+    existing_messages = get_conversation_messages(conversation_id)
+    user_messages = [m for m in existing_messages if m["role"] == "user"]
+    if len(user_messages) == 1:
+        title = auto_generate_title(body.content)
+        update_conversation_title(conversation_id, title)
+    
+    # Build conversation history from stored messages
+    history = [{"role": m["role"], "content": m["content"]} for m in existing_messages]
+    
+    # Generate AI response
+    try:
+        ai_response = generate_ai_response(body.content, history)
+    except Exception as e:
+        ai_response = "Sorry, I encountered an error generating a response. Please try again."
+    
+    # Save the AI response
+    save_message(conversation_id, "assistant", ai_response)
+    
+    return {
+        "user_message": {"role": "user", "content": body.content},
+        "assistant_message": {"role": "assistant", "content": ai_response}
+    }
 
 # Helper function to get user ID from token
 def get_user_id_from_header(authorization: Optional[str]) -> str:

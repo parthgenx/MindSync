@@ -77,6 +77,36 @@ export const authAPI = {
     return response.data;
   },
 };
+
+export const conversationsAPI = {
+  create: async (title = 'New Chat') => {
+    const response = await api.post('/api/conversations', { title });
+    return response.data.conversation;
+  },
+
+  getAll: async () => {
+    const response = await api.get('/api/conversations');
+    return response.data.conversations;
+  },
+
+  getMessages: async (conversationId) => {
+    const response = await api.get(`/api/conversations/${conversationId}/messages`);
+    return response.data.messages;
+  },
+
+  delete: async (conversationId) => {
+    const response = await api.delete(`/api/conversations/${conversationId}`);
+    return response.data;
+  },
+
+  sendMessage: async (conversationId, content) => {
+    const response = await api.post(`/api/conversations/${conversationId}/messages`, {
+      content,
+      role: 'user'
+    });
+    return response.data;
+  },
+};
 // Add token to all requests if it exists
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
