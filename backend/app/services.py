@@ -216,10 +216,18 @@ def get_user_from_token(token: str):
         return None
 
 # ==================== Conversation & Message functions ====================
+# Use supabase_admin (service role key) to bypass RLS since the backend
+# doesn't have an authenticated user session. User identity is validated
+# via JWT token in the API endpoints before calling these functions.
+
+def _get_db():
+    """Get the admin client (bypasses RLS) or fall back to regular client"""
+    return supabase_admin if supabase_admin else supabase
 
 def create_conversation(user_id: str, title: str = "New Chat"):
     """Create a new conversation"""
-    response = supabase.table('conversations').insert({
+    db = _get_db()
+    response = db.table('conversations').insert({
         "user_id": user_id,
         "title": title
     }).execute()
@@ -227,7 +235,8 @@ def create_conversation(user_id: str, title: str = "New Chat"):
 
 def get_user_conversations(user_id: str):
     """Get all conversations for a user, sorted by most recent"""
-    response = supabase.table('conversations') \
+    db = _get_db()
+    response = db.table('conversations') \
         .select('*') \
         .eq('user_id', user_id) \
         .order('updated_at', desc=True) \
@@ -236,7 +245,8 @@ def get_user_conversations(user_id: str):
 
 def get_conversation_messages(conversation_id: str):
     """Get all messages for a conversation"""
-    response = supabase.table('messages') \
+    db = _get_db()
+    response = db.table('messages') \
         .select('*') \
         .eq('conversation_id', conversation_id) \
         .order('created_at', desc=False) \
@@ -245,13 +255,14 @@ def get_conversation_messages(conversation_id: str):
 
 def save_message(conversation_id: str, role: str, content: str):
     """Save a message to a conversation"""
-    response = supabase.table('messages').insert({
+    db = _get_db()
+    response = db.table('messages').insert({
         "conversation_id": conversation_id,
         "role": role,
         "content": content
     }).execute()
     # Update conversation's updated_at timestamp
-    supabase.table('conversations') \
+    db.table('conversations') \
         .update({"updated_at": "now()"}) \
         .eq('id', conversation_id) \
         .execute()
@@ -259,7 +270,8 @@ def save_message(conversation_id: str, role: str, content: str):
 
 def delete_conversation(conversation_id: str):
     """Delete a conversation and its messages (CASCADE)"""
-    response = supabase.table('conversations') \
+    db = _get_db()
+    response = db.table('conversations') \
         .delete() \
         .eq('id', conversation_id) \
         .execute()
@@ -267,7 +279,8 @@ def delete_conversation(conversation_id: str):
 
 def update_conversation_title(conversation_id: str, title: str):
     """Update conversation title"""
-    response = supabase.table('conversations') \
+    db = _get_db()
+    response = db.table('conversations') \
         .update({"title": title}) \
         .eq('id', conversation_id) \
         .execute()
